@@ -67,10 +67,13 @@ module SyncChecker
     end
 
     def check_explanation(unpublishing)
-      explanation = Whitehall::GovspeakRenderer.new.govspeak_to_html(unpublishing.explanation)
       item_explanation = content_item["details"]["explanation"]
-      if explanation != item_explanation
-        "expected gone explanation: '#{explanation}' but got '#{item_explanation}'"
+      return if unpublishing.explanation.blank? && item_explanation.blank?
+
+      explanation = Whitehall::GovspeakRenderer.new.govspeak_to_html(unpublishing.explanation)
+
+      if !EquivalentXml.equivalent?(explanation, item_explanation)
+        "expected withdrawn notice: '#{explanation}' but got '#{item_explanation}'"
       end
     end
 
