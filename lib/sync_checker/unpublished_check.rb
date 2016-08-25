@@ -1,3 +1,5 @@
+require 'equivalent-xml'
+
 module SyncChecker
   UnpublishedCheck = Struct.new(:document) do
     attr_reader :response, :content_item, :unpublishing
@@ -83,9 +85,12 @@ module SyncChecker
     end
 
     def check_for_withdrawn_notice(unpublishing)
-      withdrawn_explanation = Whitehall::GovspeakRenderer.new.govspeak_to_html(unpublishing.explanation)
       item_withdrawn_explanation = content_item["withdrawn_notice"]["explanation"]
-      if withdrawn_explanation != item_withdrawn_explanation
+      return if unpublishing.explanation.blank? && item_withdrawn_explanation.blank?
+
+      withdrawn_explanation = Whitehall::GovspeakRenderer.new.govspeak_to_html(unpublishing.explanation)
+
+      if !EquivalentXml.equivalent?(withdrawn_explanation, item_withdrawn_explanation)
         "expected withdrawn notice: '#{withdrawn_explanation}' but got '#{item_withdrawn_explanation}'"
       end
     end
