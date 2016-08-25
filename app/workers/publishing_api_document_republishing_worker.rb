@@ -40,6 +40,7 @@ class PublishingApiDocumentRepublishingWorker < WorkerBase
     else
       if there_is_only_a_draft?
         send_draft_edition
+        patch_links_for_draft_edition
       elsif there_is_only_a_published_edition?
         send_published_edition
       elsif there_is_a_newer_draft?
@@ -104,6 +105,15 @@ private
         "republish",
         locale
       )
+    end
+  end
+
+  def patch_links_for_draft_edition
+    presenter = PublishingApiPresenters.presenter_for(pre_publication_edition)
+    locales_for(pre_publication_edition) do |locale|
+      I18n.with_locale(locale) do
+        Whitehall.publishing_api_v2_client.patch_links(presenter.content_id, links: presenter.links)
+      end
     end
   end
 
