@@ -99,21 +99,44 @@ class DetailedGuide < Edition
     parse_base_path_from_related_mainstream_url(url)
   end
 
-  def related_mainstream
-    base_paths = []
-    base_paths.push(related_mainstream_base_path)
-    base_paths.push(additional_related_mainstream_base_path)
-    base_paths.compact!
-
+  def fetch_related_mainstream_content_ids
+    base_paths = {
+      related_mainstream: related_mainstream_base_path,
+      additional_related_mainstream: additional_related_mainstream_base_path
+    }
     if base_paths.any?
-      Whitehall.publishing_api_v2_client
-        .lookup_content_ids(base_paths: base_paths)
-        .values
-        .compact
+      content_ids = {}
+      base_paths.each do |type, base_path|
+        content_id = Whitehall.publishing_api_v2_client.lookup_content_id(base_path: base_path)
+        content_ids[type] = content_id
+      end
+      # binding.pry
+      RelatedMainstream.create!(edition: self, content_id: content_ids[:related_mainstream], additional_content_id: content_ids[:additional_related_mainstream]) #should I make this a real record or should it come from a factory?
     else
       []
     end
+      # if content_id.nil?
+        # errors.add(:related_mainstream_content_title, "cannot be blank if a related URL is given")
+
+
   end
+
+  # def related_mainstream
+  #
+  #   base_paths = []
+  #   base_paths.push(related_mainstream_base_path)
+  #   base_paths.push(additional_related_mainstream_base_path)
+  #   base_paths.compact!
+  #
+  #   if base_paths.any?
+  #     Whitehall.publishing_api_v2_client
+  #       .lookup_content_ids(base_paths: base_paths)
+  #       .values
+  #       .compact
+  #   else
+  #     []
+  #   end
+  # end
 
   def government
     @government ||= Government.on_date(date_for_government) unless date_for_government.nil?

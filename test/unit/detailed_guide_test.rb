@@ -122,6 +122,29 @@ class DetailedGuideTest < ActiveSupport::TestCase
     assert_equal detailed_guide.related_detailed_guide_content_ids, [some_detailed_guide.content_id]
   end
 
+  test 'fetch_related_mainstream_content_ids works correctly' do
+    detailed_guide = build(
+      :detailed_guide,
+      id: 1,
+      related_mainstream_content_title: "A mainstream content",
+      related_mainstream_content_url: "http://www.gov.uk/mainstream-content", additional_related_mainstream_content_title: "Another mainstream content",
+      additional_related_mainstream_content_url: "http://www.gov.uk/another-mainstream-content"
+    )
+
+    lookup_hash = {
+      "/mainstream-content" => "9dd9e077-ae45-45f6-ad9d-2a484e5ff312",
+      "/another-mainstream-content" => "9af50189-de1c-49af-a334-6b1d87b593a6"
+    }
+
+    publishing_api_has_lookups(lookup_hash)
+
+    detailed_guide.fetch_related_mainstream_content_ids
+
+    assert_equal "9dd9e077-ae45-45f6-ad9d-2a484e5ff312", detailed_guide.related_mainstream.first.content_id
+    assert_equal "9af50189-de1c-49af-a334-6b1d87b593a6", detailed_guide.related_mainstream.first.additional_content_id
+
+  end
+
   test 'related_mainstream works correctly' do
     lookup_hash = {
       "/guidance/lorem" => "9dd9e077-ae45-45f6-ad9d-2a484e5ff312",
